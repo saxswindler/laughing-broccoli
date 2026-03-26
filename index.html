@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Snapshot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; }
+    header p  { color: #555; margin-top: 6px; font-size: 0.95rem; }
+
+    .container { max-width: 780px; margin: 0 auto; }
+
+    /* ── Form card ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 520px) { .field-grid { grid-template-columns: 1fr; } }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #333;
+    }
+    label span.hint {
+      font-weight: 400;
+      color: #888;
+      font-size: 0.78rem;
+    }
+    input[type="text"],
+    input[type="number"] {
+      padding: 9px 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color 0.15s;
+      background: #fafafa;
+    }
+    input:focus { outline: none; border-color: #4f6ef7; background: #fff; }
+
+    .goal-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 520px) { .goal-row { grid-template-columns: 1fr; } }
+
+    button#calcBtn {
+      width: 100%;
+      padding: 13px;
+      background: #4f6ef7;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 8px;
+    }
+    button#calcBtn:hover  { background: #3a57e8; }
+    button#calcBtn:active { transform: scale(0.98); }
+
+    /* ── Results ── */
+    #results { display: none; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 520px) { .metric-grid { grid-template-columns: 1fr; } }
+
+    .metric-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border-left: 5px solid #ccc;
+    }
+    .metric-card .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 6px; }
+    .metric-card .value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+    .metric-card .sub   { font-size: 0.82rem; color: #666; margin-top: 6px; }
+
+    .green  { border-left-color: #22c55e; color: #15803d; }
+    .yellow { border-left-color: #eab308; color: #92400e; }
+    .orange { border-left-color: #f97316; color: #c2410c; }
+    .red    { border-left-color: #ef4444; color: #991b1b; }
+
+    /* goals section */
+    .goals-card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+    .goals-card h2 { font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #555; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+
+    .goal-result { margin-bottom: 16px; }
+    .goal-result .goal-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .goal-result .goal-name span { font-weight: 400; color: #555; font-size: 0.875rem; }
+    .progress-track {
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    /* score card */
+    .score-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .score-card .score-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: #888; margin-bottom: 10px; }
+    .score-card .score-number { font-size: 4rem; font-weight: 800; line-height: 1; }
+    .score-card .score-tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 14px;
+      border-radius: 99px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .score-card .score-breakdown { font-size: 0.82rem; color: #777; margin-top: 14px; line-height: 1.7; }
+
+    .tag-green  { background: #dcfce7; color: #15803d; }
+    .tag-yellow { background: #fef9c3; color: #92400e; }
+    .tag-red    { background: #fee2e2; color: #991b1b; }
+
+    footer { text-align: center; font-size: 0.78rem; color: #aaa; padding-top: 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Financial Snapshot</h1>
+    <p>Fill in your numbers to see your household's financial health at a glance.</p>
+  </header>
+
+  <!-- ── FORM ── -->
+  <form id="snapshotForm">
+
+    <div class="card">
+      <h2>Income &amp; Expenses</h2>
+      <div class="field-grid">
+        <label>
+          Monthly take-home income
+          <span class="hint">After taxes, all sources</span>
+          <input type="number" id="income" min="0" placeholder="e.g. 5500" />
+        </label>
+        <label>
+          Essential monthly expenses
+          <span class="hint">Rent, utilities, food, insurance</span>
+          <input type="number" id="essential" min="0" placeholder="e.g. 3800" />
+        </label>
+        <label>
+          Total monthly debt payments
+          <span class="hint">Minimum payments across all debts</span>
+          <input type="number" id="monthlyDebt" min="0" placeholder="e.g. 620" />
+        </label>
+        <label>
+          Total annual gross income
+          <span class="hint">Before taxes, used for debt ratio</span>
+          <input type="number" id="grossIncome" min="0" placeholder="e.g. 82000" />
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cash &amp; Safety</h2>
+      <div class="field-grid">
+        <label>
+          Emergency fund balance
+          <span class="hint">Dedicated savings for emergencies</span>
+          <input type="number" id="emergencyFund" min="0" placeholder="e.g. 11500" />
+        </label>
+        <label>
+          Checking buffer
+          <span class="hint">Amount above bills kept in checking</span>
+          <input type="number" id="checkingBuffer" min="0" placeholder="e.g. 1200" />
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Debt</h2>
+      <div class="field-grid">
+        <label>
+          Total debt balance
+          <span class="hint">All loans, credit cards, etc.</span>
+          <input type="number" id="totalDebt" min="0" placeholder="e.g. 34000" />
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Savings Goals <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0">(up to 3 — leave blank to skip)</span></h2>
+      <div id="goalRows">
+        <div class="goal-row">
+          <label>Goal name<input type="text"   class="gName"    placeholder="e.g. Vacation" /></label>
+          <label>Target ($)<input type="number" class="gTarget" min="0" placeholder="5000" /></label>
+          <label>Saved so far ($)<input type="number" class="gCurrent" min="0" placeholder="1200" /></label>
+        </div>
+        <div class="goal-row">
+          <label>Goal name<input type="text"   class="gName"    placeholder="e.g. New Car" /></label>
+          <label>Target ($)<input type="number" class="gTarget" min="0" placeholder="15000" /></label>
+          <label>Saved so far ($)<input type="number" class="gCurrent" min="0" placeholder="3000" /></label>
+        </div>
+        <div class="goal-row">
+          <label>Goal name<input type="text"   class="gName"    placeholder="e.g. Home Reno" /></label>
+          <label>Target ($)<input type="number" class="gTarget" min="0" placeholder="20000" /></label>
+          <label>Saved so far ($)<input type="number" class="gCurrent" min="0" placeholder="500" /></label>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" id="calcBtn">Calculate Snapshot</button>
+  </form>
+
+  <!-- ── RESULTS ── -->
+  <div id="results">
+
+    <div class="metric-grid" style="margin-top:28px;">
+      <div class="metric-card" id="cardEmergency">
+        <div class="label">Emergency Fund</div>
+        <div class="value" id="valEmergency">—</div>
+        <div class="sub"  id="subEmergency"></div>
+      </div>
+      <div class="metric-card" id="cardDebt">
+        <div class="label">Debt Load</div>
+        <div class="value" id="valDebt">—</div>
+        <div class="sub"  id="subDebt"></div>
+      </div>
+    </div>
+
+    <div class="goals-card" id="goalsSection">
+      <h2>Savings Goals Progress</h2>
+      <div id="goalResults"></div>
+    </div>
+
+    <div class="score-card" id="scoreSection">
+      <div class="score-label">Organization Readiness Score</div>
+      <div class="score-number" id="scoreNumber">—</div>
+      <div><span class="score-tag" id="scoreTag"></span></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+    </div>
+
+  </div>
+
+  <footer>No data is stored or sent anywhere. Everything runs in your browser.</footer>
+</div>
+
+<script>
+  document.getElementById('calcBtn').addEventListener('click', calculate);
+
+  function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  function calculate() {
+    // ── Raw inputs ──
+    const essential    = val('essential');
+    const grossIncome  = val('grossIncome');
+    const emergencyFund = val('emergencyFund');
+    const buffer       = val('checkingBuffer');
+    const totalDebt    = val('totalDebt');
+
+    // ── 1. Emergency fund months ──
+    const totalLiquid = emergencyFund + buffer;
+    const efMonths    = essential > 0 ? totalLiquid / essential : 0;
+
+    let efColor, efSub;
+    if      (efMonths >= 6) { efColor = 'green';  efSub = 'Target met (6+ months)'; }
+    else if (efMonths >= 3) { efColor = 'yellow'; efSub = 'Partial coverage (3–6 months)'; }
+    else                    { efColor = 'red';    efSub = 'Under-protected (< 3 months)'; }
+
+    setMetric('cardEmergency', 'valEmergency', 'subEmergency',
+      efMonths.toFixed(1) + ' mo', efSub, efColor);
+
+    // ── 2. Debt load ──
+    const debtRatio = grossIncome > 0 ? totalDebt / grossIncome : 0;
+    let dlLabel, dlColor, dlSub;
+    if      (debtRatio < 0.5) { dlLabel = 'Low';      dlColor = 'green';  dlSub = 'Debt < 6 months gross income'; }
+    else if (debtRatio < 1.0) { dlLabel = 'Moderate'; dlColor = 'yellow'; dlSub = '0.5×–1× annual gross income'; }
+    else if (debtRatio < 2.0) { dlLabel = 'High';     dlColor = 'orange'; dlSub = '1×–2× annual gross income'; }
+    else                      { dlLabel = 'Critical'; dlColor = 'red';    dlSub = '> 2× annual gross income'; }
+
+    setMetric('cardDebt', 'valDebt', 'subDebt', dlLabel, dlSub, dlColor);
+
+    // ── 3. Savings goals ──
+    const names    = [...document.querySelectorAll('.gName')].map(el => el.value.trim());
+    const targets  = [...document.querySelectorAll('.gTarget')].map(el => parseFloat(el.value) || 0);
+    const currents = [...document.querySelectorAll('.gCurrent')].map(el => parseFloat(el.value) || 0);
+
+    const goalResultsEl = document.getElementById('goalResults');
+    goalResultsEl.innerHTML = '';
+    const goalScores = [];
+
+    let hasGoal = false;
+    for (let i = 0; i < 3; i++) {
+      if (!names[i] || targets[i] <= 0) continue;
+      hasGoal = true;
+      const pct = Math.min(currents[i] / targets[i] * 100, 100);
+      goalScores.push(pct);
+
+      let fillColor;
+      if      (pct >= 75) fillColor = '#22c55e';
+      else if (pct >= 40) fillColor = '#eab308';
+      else                fillColor = '#ef4444';
+
+      goalResultsEl.innerHTML += `
+        <div class="goal-result">
+          <div class="goal-name">${escHtml(names[i])}
+            <span>$${fmt(currents[i])} / $${fmt(targets[i])}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${pct}%;background:${fillColor};"></div>
+          </div>
+          <div style="font-size:0.78rem;color:#666;margin-top:4px;">${pct.toFixed(0)}% complete</div>
+        </div>`;
+    }
+
+    if (!hasGoal) {
+      goalResultsEl.innerHTML = '<p style="color:#aaa;font-size:0.875rem;">No goals entered.</p>';
+    }
+
+    // ── 4. Readiness score ──
+    // Emergency fund → 40 pts
+    let efPts;
+    if      (efMonths >= 6) efPts = 40;
+    else if (efMonths >= 3) efPts = 24;
+    else if (efMonths >= 1) efPts = 12;
+    else                    efPts = 0;
+
+    // Avg goal progress → 30 pts
+    const avgGoal = goalScores.length > 0
+      ? goalScores.reduce((a, b) => a + b, 0) / goalScores.length
+      : 0;
+    let goalPts;
+    if      (avgGoal >= 75) goalPts = 30;
+    else if (avgGoal >= 50) goalPts = 20;
+    else if (avgGoal >= 25) goalPts = 10;
+    else                    goalPts = 0;
+
+    // Debt load → 30 pts
+    let debtPts;
+    if      (dlColor === 'green')  debtPts = 30;
+    else if (dlColor === 'yellow') debtPts = 20;
+    else if (dlColor === 'orange') debtPts = 10;
+    else                           debtPts = 0;
+
+    const score = efPts + goalPts + debtPts;
+
+    let scoreColor, scoreTagClass, scoreTagText;
+    if      (score >= 75) { scoreColor = '#15803d'; scoreTagClass = 'tag-green';  scoreTagText = 'Well Organized'; }
+    else if (score >= 45) { scoreColor = '#92400e'; scoreTagClass = 'tag-yellow'; scoreTagText = 'Developing'; }
+    else                  { scoreColor = '#991b1b'; scoreTagClass = 'tag-red';    scoreTagText = 'Needs Attention'; }
+
+    document.getElementById('scoreNumber').textContent = score;
+    document.getElementById('scoreNumber').style.color = scoreColor;
+    const tag = document.getElementById('scoreTag');
+    tag.textContent = scoreTagText;
+    tag.className = 'score-tag ' + scoreTagClass;
+    document.getElementById('scoreBreakdown').innerHTML =
+      `Emergency fund: ${efPts}/40 pts &nbsp;·&nbsp; Goals progress: ${goalPts}/30 pts &nbsp;·&nbsp; Debt load: ${debtPts}/30 pts`;
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setMetric(cardId, valId, subId, value, sub, color) {
+    const card = document.getElementById(cardId);
+    card.className = 'metric-card ' + color;
+    document.getElementById(valId).textContent = value;
+    document.getElementById(subId).textContent = sub;
+  }
+
+  function fmt(n) { return Number(n).toLocaleString(); }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
