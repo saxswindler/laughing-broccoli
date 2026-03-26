@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Snapshot</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f7;
+      color: #1c1c2e;
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+      line-height: 1.55;
+    }
+
+    /* ─── Page wrapper ─────────────────────────────────── */
+    .page-wrapper {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ─── Header ───────────────────────────────────────── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .page-header h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 800;
+      color: #1c1c2e;
+      letter-spacing: -0.02em;
+    }
+    .page-header p {
+      margin-top: 8px;
+      color: #6b7280;
+      font-size: 0.95rem;
+      max-width: 480px;
+      margin-inline: auto;
+    }
+
+    /* ─── Card ─────────────────────────────────────────── */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9ca3af;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* ─── Form fields ───────────────────────────────────── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 18px;
+    }
+    .field:last-child { margin-bottom: 0; }
+
+    .field label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .field .field-hint {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
+    .field input[type="number"] {
+      padding: 10px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: #1c1c2e;
+      background: #f9fafb;
+      width: 100%;
+      transition: border-color 0.15s, background 0.15s;
+      -moz-appearance: textfield;
+    }
+    .field input[type="number"]::-webkit-inner-spin-button,
+    .field input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .field input[type="number"]:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: #fff;
+    }
+
+    /* ─── Yes/No checklist ─────────────────────────────── */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .checklist-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .checklist-item:first-child { padding-top: 0; }
+
+    .checklist-item .item-text {
+      font-size: 0.875rem;
+      color: #374151;
+      flex: 1;
+      padding-top: 2px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .radio-group input[type="radio"] { display: none; }
+
+    .radio-group label {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.12s;
+      user-select: none;
+    }
+
+    .radio-group input[type="radio"].yes-radio:checked + label {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #15803d;
+    }
+    .radio-group input[type="radio"].no-radio:checked + label {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+    }
+    .radio-group label:hover { border-color: #c7d2fe; color: #4338ca; }
+
+    /* ─── Calculate button ─────────────────────────────── */
+    #calcBtn {
+      width: 100%;
+      padding: 14px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+      margin-top: 4px;
+    }
+    #calcBtn:hover  { background: #4f46e5; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
+    #calcBtn:active { transform: scale(0.98); }
+
+    /* ─── Results section ──────────────────────────────── */
+    #results-section { display: none; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 480px) { .results-grid { grid-template-columns: 1fr; } }
+
+    /* Metric card */
+    .metric-card {
+      border-radius: 14px;
+      padding: 20px 18px;
+      border-left: 5px solid transparent;
+      background: #f9fafb;
+      transition: background 0.2s;
+    }
+    .metric-card .metric-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    .metric-card .metric-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .metric-card .metric-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .metric-card .metric-desc {
+      font-size: 0.8rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    /* Color themes */
+    .theme-green  { border-left-color: #22c55e; background: #f0fdf4; }
+    .theme-yellow { border-left-color: #f59e0b; background: #fffbeb; }
+    .theme-red    { border-left-color: #ef4444; background: #fef2f2; }
+
+    .theme-green  .metric-value { color: #15803d; }
+    .theme-yellow .metric-value { color: #b45309; }
+    .theme-red    .metric-value { color: #b91c1c; }
+
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red    { background: #fee2e2; color: #b91c1c; }
+
+    /* Score card — full width */
+    .score-card {
+      border-radius: 14px;
+      padding: 28px 24px;
+      text-align: center;
+      background: #f9fafb;
+      border-top: 5px solid transparent;
+    }
+    .score-card .metric-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .score-card .score-number {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+    .score-card .metric-badge { display: inline-block; padding: 4px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; }
+    .score-card .score-breakdown {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .score-card .metric-desc {
+      font-size: 0.83rem;
+      color: #6b7280;
+      max-width: 460px;
+      margin-inline: auto;
+      line-height: 1.55;
+    }
+
+    .score-theme-green  { border-top-color: #22c55e; background: #f0fdf4; }
+    .score-theme-yellow { border-top-color: #f59e0b; background: #fffbeb; }
+    .score-theme-red    { border-top-color: #ef4444; background: #fef2f2; }
+
+    .score-theme-green  .score-number { color: #15803d; }
+    .score-theme-yellow .score-number { color: #b45309; }
+    .score-theme-red    .score-number { color: #b91c1c; }
+
+    /* ─── CTA block ────────────────────────────────────── */
+    .cta-card {
+      background: #eef2ff;
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      border: 1.5px solid #c7d2fe;
+    }
+    .cta-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1c1c2e;
+      margin-bottom: 8px;
+    }
+    .cta-card p {
+      font-size: 0.875rem;
+      color: #4b5563;
+      line-height: 1.6;
+      max-width: 480px;
+      margin-inline: auto;
+    }
+    .cta-card a {
+      color: #4f46e5;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .cta-card a:hover { color: #3730a3; }
+
+    /* ─── Divider ───────────────────────────────────────── */
+    .section-divider {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #d1d5db;
+      margin: 28px 0 20px;
+    }
+
+    /* ─── Validation ────────────────────────────────────── */
+    .error-msg {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      color: #b91c1c;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* ─── Footer ────────────────────────────────────────── */
+    .page-footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #d1d5db;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1>Financial Snapshot</h1>
+    <p>Enter a few numbers to see a clear picture of your household's financial organization.</p>
+  </header>
+
+  <!-- Form -->
+  <form id="snapshot-form" novalidate>
+
+    <!-- Numbers card -->
+    <div class="card">
+      <div class="card-title">Your Numbers</div>
+
+      <div class="field">
+        <label for="essential">Monthly essential expenses ($)
+          <span class="field-hint"> — rent, utilities, food, insurance</span>
+        </label>
+        <input type="number" id="essential" min="0" placeholder="e.g. 3800" />
+      </div>
+
+      <div class="field">
+        <label for="emergencyCash">Total emergency cash &amp; savings ($)
+          <span class="field-hint"> — liquid funds set aside for emergencies</span>
+        </label>
+        <input type="number" id="emergencyCash" min="0" placeholder="e.g. 12500" />
+      </div>
+
+      <div class="field">
+        <label for="totalDebt">Total debt balance ($)
+          <span class="field-hint"> — all loans, credit cards, etc.</span>
+        </label>
+        <input type="number" id="totalDebt" min="0" placeholder="e.g. 34000" />
+      </div>
+
+      <div class="field">
+        <label for="goalTarget">Total savings goal target ($)
+          <span class="field-hint"> — combined target across all active goals</span>
+        </label>
+        <input type="number" id="goalTarget" min="0" placeholder="e.g. 20000" />
+      </div>
+
+      <div class="field">
+        <label for="goalCurrent">Current amount saved toward those goals ($)
+          <span class="field-hint"> — total saved so far across all goals</span>
+        </label>
+        <input type="number" id="goalCurrent" min="0" placeholder="e.g. 7500" />
+      </div>
+    </div>
+
+    <!-- Checklist card -->
+    <div class="card">
+      <div class="card-title">Organization Checklist</div>
+
+      <div class="checklist-item">
+        <span class="item-text">We have an up-to-date list of all our accounts.</span>
+        <div class="radio-group">
+          <input type="radio" class="yes-radio" name="q1" id="q1y" value="yes" />
+          <label for="q1y">Yes</label>
+          <input type="radio" class="no-radio" name="q1" id="q1n" value="no" />
+          <label for="q1n">No</label>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <span class="item-text">We have at least one current will or trust.</span>
+        <div class="radio-group">
+          <input type="radio" class="yes-radio" name="q2" id="q2y" value="yes" />
+          <label for="q2y">Yes</label>
+          <input type="radio" class="no-radio" name="q2" id="q2n" value="no" />
+          <label for="q2n">No</label>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <span class="item-text">Our beneficiaries on accounts and policies are up to date.</span>
+        <div class="radio-group">
+          <input type="radio" class="yes-radio" name="q3" id="q3y" value="yes" />
+          <label for="q3y">Yes</label>
+          <input type="radio" class="no-radio" name="q3" id="q3n" value="no" />
+          <label for="q3n">No</label>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <span class="item-text">We have at least 3 months of essential expenses in cash.</span>
+        <div class="radio-group">
+          <input type="radio" class="yes-radio" name="q4" id="q4y" value="yes" />
+          <label for="q4y">Yes</label>
+          <input type="radio" class="no-radio" name="q4" id="q4n" value="no" />
+          <label for="q4n">No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="error-msg">
+      Please fill in all five number fields before calculating.
+    </div>
+
+    <button type="button" id="calcBtn">Calculate Snapshot</button>
+  </form>
+
+  <!-- Results -->
+  <div id="results-section">
+    <div class="section-divider">Your Results</div>
+
+    <div class="results-grid">
+      <!-- Emergency fund -->
+      <div class="metric-card" id="card-ef">
+        <div class="metric-label">Emergency Fund</div>
+        <div class="metric-value" id="val-ef">—</div>
+        <div class="metric-badge" id="badge-ef"></div>
+        <div class="metric-desc" id="desc-ef"></div>
+      </div>
+
+      <!-- Goal progress -->
+      <div class="metric-card" id="card-goal">
+        <div class="metric-label">Goal Progress</div>
+        <div class="metric-value" id="val-goal">—</div>
+        <div class="metric-badge" id="badge-goal"></div>
+        <div class="metric-desc" id="desc-goal"></div>
+      </div>
+
+      <!-- Debt load -->
+      <div class="metric-card" id="card-debt">
+        <div class="metric-label">Debt Load</div>
+        <div class="metric-value" id="val-debt">—</div>
+        <div class="metric-badge" id="badge-debt"></div>
+        <div class="metric-desc" id="desc-debt"></div>
+      </div>
+
+      <!-- Checklist placeholder for symmetry — replaced by score below on mobile -->
+    </div>
+
+    <!-- Score — full width -->
+    <div class="score-card" id="card-score">
+      <div class="metric-label">Organization Readiness Score</div>
+      <div class="score-number" id="val-score">—</div>
+      <div><span class="metric-badge" id="badge-score"></span></div>
+      <div class="score-breakdown" id="breakdown-score"></div>
+      <div class="metric-desc" id="desc-score"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-card" style="margin-top:20px;">
+      <h3>Want a system to keep this organized?</h3>
+      <p>
+        Use our <a href="#" id="cta-link">Life &amp; Money Organizer</a> to track accounts,
+        goals, documents, and annual checkups — all in one place. It's a simple Google Sheets
+        template designed for clarity, not complexity.
+      </p>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    No data is stored or sent anywhere. All calculations run in your browser.<br />
+    This tool is for general organizational awareness only and does not constitute financial advice.
+  </footer>
+
+</div><!-- /.page-wrapper -->
+
+<script>
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  function numVal(id) {
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? null : v;
+  }
+
+  function radioVal(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : null; // "yes" | "no" | null
+  }
+
+  function setCard(cardId, valueText, badgeText, badgeClass, theme, descText) {
+    document.getElementById(cardId).className = 'metric-card ' + theme;
+    document.getElementById('val-'   + cardId.replace('card-','')).textContent = valueText;
+    const badge = document.getElementById('badge-' + cardId.replace('card-',''));
+    badge.textContent  = badgeText;
+    badge.className    = 'metric-badge ' + badgeClass;
+    document.getElementById('desc-'  + cardId.replace('card-','')).textContent = descText;
+  }
+
+  // ─── Main calculation ──────────────────────────────────────────────────────
+  document.getElementById('calcBtn').addEventListener('click', function () {
+    const essential    = numVal('essential');
+    const emergencyCash = numVal('emergencyCash');
+    const totalDebt    = numVal('totalDebt');
+    const goalTarget   = numVal('goalTarget');
+    const goalCurrent  = numVal('goalCurrent');
+    const errorEl      = document.getElementById('error-msg');
+
+    // Validation — all five numbers required
+    if (essential === null || emergencyCash === null || totalDebt === null
+        || goalTarget === null || goalCurrent === null) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    errorEl.style.display = 'none';
+
+    // ── 1. Emergency fund months ──────────────────────────────────────────
+    const efMonths = essential > 0 ? emergencyCash / essential : 0;
+    let efTheme, efBadge, efBadgeClass, efDesc;
+
+    if (efMonths >= 6) {
+      efTheme = 'theme-green'; efBadge = 'Strong'; efBadgeClass = 'badge-green';
+      efDesc  = 'Having six or more months of essential expenses in liquid savings is a commonly cited benchmark for a well-funded emergency reserve.';
+    } else if (efMonths >= 3) {
+      efTheme = 'theme-yellow'; efBadge = 'Partial'; efBadgeClass = 'badge-yellow';
+      efDesc  = 'Coverage between three and six months is a frequently referenced range. Many households aim to build toward the higher end over time.';
+    } else {
+      efTheme = 'theme-red'; efBadge = 'Low'; efBadgeClass = 'badge-red';
+      efDesc  = 'Less than three months of coverage means a single unexpected expense could strain day-to-day finances. Building this reserve is a common starting point.';
+    }
+
+    setCard('card-ef',
+      efMonths.toFixed(1) + ' mo',
+      efBadge, efBadgeClass, efTheme, efDesc);
+
+    // ── 2. Goal progress ──────────────────────────────────────────────────
+    const goalPct = goalTarget > 0 ? Math.min(goalCurrent / goalTarget * 100, 100) : 0;
+    let goalTheme, goalBadge, goalBadgeClass, goalDesc;
+
+    if (goalPct >= 75) {
+      goalTheme = 'theme-green'; goalBadge = 'On Track'; goalBadgeClass = 'badge-green';
+      goalDesc  = 'Reaching 75% or more of a savings target is a strong sign that consistent contributions have been made. Maintaining the habit is what carries goals to completion.';
+    } else if (goalPct >= 40) {
+      goalTheme = 'theme-yellow'; goalBadge = 'In Progress'; goalBadgeClass = 'badge-yellow';
+      goalDesc  = 'Progress in the 40–74% range shows meaningful saving has happened. Reviewing timelines and monthly contributions can help clarify what's needed to stay on course.';
+    } else {
+      goalTheme = 'theme-red'; goalBadge = 'Early Stage'; goalBadgeClass = 'badge-red';
+      goalDesc  = 'Below 40% suggests goals are still in early stages or timelines may be long. Breaking goals into smaller milestones can make progress feel more tangible.';
+    }
+
+    setCard('card-goal',
+      goalPct.toFixed(0) + '%',
+      goalBadge, goalBadgeClass, goalTheme, goalDesc);
+
+    // ── 3. Debt load ──────────────────────────────────────────────────────
+    const debtRatio = essential > 0 ? totalDebt / essential : 0;
+    let debtTheme, debtBadge, debtBadgeClass, debtLabel, debtDesc;
+
+    if (debtRatio < 3) {
+      debtTheme = 'theme-green'; debtBadge = 'Low'; debtBadgeClass = 'badge-green';
+      debtLabel = 'Low';
+      debtDesc  = 'A total debt balance under 3× monthly essential expenses is a relatively contained load. Staying current on payments and avoiding new high-rate debt supports stability.';
+    } else if (debtRatio <= 6) {
+      debtTheme = 'theme-yellow'; debtBadge = 'Moderate'; debtBadgeClass = 'badge-yellow';
+      debtLabel = 'Moderate';
+      debtDesc  = 'A debt-to-expenses ratio in the 3–6× range is common. Keeping a clear picture of balances, rates, and minimum payments helps ensure nothing is overlooked.';
+    } else {
+      debtTheme = 'theme-red'; debtBadge = 'High'; debtBadgeClass = 'badge-red';
+      debtLabel = 'High';
+      debtDesc  = 'A ratio above 6× monthly expenses is worth tracking carefully. Understanding which balances carry the highest rates and what the minimum payment totals are is a useful starting point.';
+    }
+
+    setCard('card-debt',
+      debtLabel,
+      debtBadge, debtBadgeClass, debtTheme, debtDesc);
+
+    // ── 4. Organization readiness score ───────────────────────────────────
+    const questions  = ['q1','q2','q3','q4'];
+    let yesCount = 0;
+    let answeredCount = 0;
+
+    questions.forEach(function(q) {
+      const v = radioVal(q);
+      if (v !== null) {
+        answeredCount++;
+        if (v === 'yes') yesCount++;
+      }
+    });
+
+    const score       = answeredCount > 0 ? Math.round(yesCount / questions.length * 100) : 0;
+    const unanswered  = questions.length - answeredCount;
+    let scoreTheme, scoreBadge, scoreBadgeClass, scoreDesc;
+
+    if (score >= 75) {
+      scoreTheme = 'score-theme-green'; scoreBadge = 'Well Organized'; scoreBadgeClass = 'badge-green';
+      scoreDesc  = 'A high score reflects that key organizational elements are in place. Regular annual reviews help keep these items current as circumstances change.';
+    } else if (score >= 50) {
+      scoreTheme = 'score-theme-yellow'; scoreBadge = 'Developing'; scoreBadgeClass = 'badge-yellow';
+      scoreDesc  = 'Some important organizational items are in place, but gaps remain. Addressing unchecked items one at a time is a manageable approach.';
+    } else {
+      scoreTheme = 'score-theme-red'; scoreBadge = 'Needs Attention'; scoreBadgeClass = 'badge-red';
+      scoreDesc  = 'Several foundational organizational items are not yet in place. Starting with the most straightforward ones — like listing all accounts — builds momentum.';
+    }
+
+    const scoreCard = document.getElementById('card-score');
+    scoreCard.className = 'score-card ' + scoreTheme;
+    document.getElementById('val-score').textContent = score;
+    const scoreBadgeEl = document.getElementById('badge-score');
+    scoreBadgeEl.textContent = scoreBadge;
+    scoreBadgeEl.className   = 'metric-badge ' + scoreBadgeClass;
+    document.getElementById('breakdown-score').textContent =
+      yesCount + ' of ' + questions.length + ' items checked Yes'
+      + (unanswered > 0 ? ' · ' + unanswered + ' unanswered (counted as No)' : '');
+    document.getElementById('desc-score').textContent = scoreDesc;
+
+    // Show results and scroll
+    const resultsEl = document.getElementById('results-section');
+    resultsEl.style.display = 'block';
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+</script>
+</body>
+</html>
